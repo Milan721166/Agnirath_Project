@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agnirath Project | Feluda</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <header class="main-header">
+        <div class="logo-container">
+            <img src="{{ url_for('static', filename='/logo.png') }}" alt="Logo" class="logo">
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="status-banner"> 
+            <h1>FELUDA Controller</h1>
+            <div class="status">
+                Camera Status: <span style="color: {% if cam_status == 'Online' %}green{% else %}red{% endif %}">
+                    {{ cam_status }} ({{ cam_ip }})
+                </span>
+            </div>
+        </div>
+        
+        <div class="video-controls">
+            <div class="video-container">
+                <img id="live-stream" src="{{ url_for('video_feed') }}" width="640" height="480">
+            </div>
+            <div class="stream-controls">
+                <div class="size-control">
+                    <label for="stream-size"><i class="fas fa-expand"></i> Stream Size:</label>
+                    <select id="stream-size" onchange="changeStreamSize()">
+                        <option value="320x240">Small (320x240)</option>
+                        <option value="640x480" selected>Medium (640x480)</option>
+                        <option value="800x600">Large (800x600)</option>
+                        <option value="1024x768">HD (1024x768)</option>
+                    </select>
+                </div>
+                <button class="size-btn" onclick="toggleFullscreen()" {% if cam_status != 'Online' %}disabled{% endif %}>
+                    <i class="fas fa-expand"></i> Fullscreen
+                </button>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="capture" onclick="window.location.href='{{ url_for('capture') }}'" {% if cam_status != 'Online' %}disabled{% endif %}>
+                <i class="fas fa-camera"></i> Capture Image
+            </button>
+            <button class="record" onclick="toggleRecording()" {% if cam_status != 'Online' %}disabled{% endif %}>
+                {% if is_recording %} <i class="fas fa-stop"></i> Stop Recording {% else %} <i class="fas fa-record-vinyl"></i> Start Recording {% endif %}
+            </button>
+        </div>
+        
+        <div class="interval-control">
+            <form action="{{ url_for('update_interval') }}" method="post">
+                <label for="interval"><i class="fas fa-clock"></i> Auto-capture interval (seconds):</label>
+                <input type="number" id="interval" name="interval" value="{{ interval }}" min="1" max="60">
+                <button type="submit"><i class="fas fa-sync-alt"></i> Update</button>
+            </form>
+        </div>
+        
+        <section class="media-section">
+            <h2><i class="fas fa-images"></i> Captured Images</h2>
+            {% if images %}
+                <div class="gallery">
+                    {% for image in images %}
+                        <div class="gallery-item">
+                            <img src="{{ url_for('static', filename='images/' + image) }}" alt="{{ image }}" loading="lazy">
+                            <div class="gallery-actions">
+                                <button onclick="window.location.href='{{ url_for('download_image', filename=image) }}'"><i class="fas fa-download"></i> Download</button>
+                                <button onclick="window.location.href='{{ url_for('delete_image', filename=image) }}'"><i class="fas fa-trash"></i> Delete</button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="empty-message">No images captured yet.</p>
+            {% endif %}
+        </section>
+        
+        <section class="media-section">
+            <h2><i class="fas fa-video"></i> Recorded Videos</h2>
+            {% if videos %}
+                <div class="gallery">
+                    {% for video in videos %}
+                        <div class="gallery-item">
+                            <video width="100%" controls preload="metadata">
+                                <source src="{{ url_for('static', filename='videos/' + video) }}" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                            <div class="gallery-actions">
+                                <button onclick="window.location.href='{{ url_for('download_video', filename=video) }}'"><i class="fas fa-download"></i> Download</button>
+                                <button onclick="window.location.href='{{ url_for('delete_video', filename=video) }}'"><i class="fas fa-trash"></i> Delete</button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="empty-message">No videos recorded yet.</p>
+            {% endif %}
+        </section>
+
+        <section class="team-section">
+            <h2><i class="fas fa-users"></i> Our Team</h2>
+            <div class="team-grid">
+                <!-- CSO -->
+                <div class="team-member">
+                    <div class="member-photo">
+                        <img src="{{ url_for('static', filename='team/CEO.png') }}" alt="CEO">
+                    </div>
+                    <h3>Suvankar Majumder</h3>
+                    <p class="position">Founder & CEO Of Agnirath Aerospace and Defence Reserch Private Limited</p>
+                    <div class="social-links">
+                        <a href="https://www.linkedin.com/in/suvankar1993?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app"><i class="fab fa-linkedin"></i></a>
+                        <a href="https://www.instagram.com/agnirathaerospace/"><i class="fab fa-twitter"></i></a>
+                        <a href="director@agnirath.com"><i class="fas fa-envelope"></i></a>
+                    </div>
+                </div>
+                <div class="team-member">
+                    <div class="member-photo">
+                        <img src="{{ url_for('static', filename='team/milan.jpg') }}" alt="CEO">
+                    </div>
+                    <h3>Milan Sahoo</h3>
+                    <p class="position">Frontend Developer Exploring Robotics</p>
+                    <div class="social-links">
+                        <a href="https://www.linkedin.com/in/milan-sahoo-98a912312/"><i class="fab fa-linkedin"></i></a>
+                        <a href="https://github.com/Milan721166"><i class="fab fa-github"></i></a>
+                        <a href="milansahoo7211662005@gmail.com"><i class="fas fa-envelope"></i></a>
+                    </div>
+                </div>
+                
+                <!-- Team Members -->
+                {% for member in ['Priyanka', 'Avijit', 'Sayan', 'Subhadip', 'Shouvik', 'Jesu'] %}
+            
+                <div class="team-member">
+                    <div class="member-photo">
+                        <img src="{{ url_for('static', filename='team/' + member + '.jpg') }}" alt="{{ member|title }}">
+                    </div>
+                    <h3>{{ member|title }}</h3>
+                    <p class="position">Exploring Robotics</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                        <a href="#"><i class="fab fa-github"></i></a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+    </div>
+    
+    <footer class="main-footer">
+        <div class="footer-content">
+            <div class="footer-logo">
+                <img src="{{ url_for('static', filename='/logo.png') }}" alt="Logo" class="logo">
+            </div>
+            <div class="footer-links">
+                <a href="https://agnirath.com/"><i class="fas fa-home"></i> Home</a>
+                <a href="https://agnirath.com/#programs"><i class="fas fa-project-diagram"></i>Programs</a>
+                <a href="#"><i class="fas fa-users"></i> Team</a>
+                <a href="https://agnirath.com/#contact"><i class="fas fa-envelope"></i> Contact</a>
+            </div>
+            <div class="footer-contact">
+                <p><i class="fas fa-map-marker-alt"></i> Habra, Kolkata, West Bengal, India</p>
+                <p><i class="fas fa-phone"></i> (+91) 8670730010</p>
+                <p><i class="fas fa-envelope"></i>agnirathaerospace@gmail.com</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2023 agnirathaerospace. All rights reserved.</p>
+            <p>Develop by Milan</p>
+            <div class="social-icons">
+                <a href="#"><i class="fab fa-facebook"></i></a>
+                <a href="#"><i class="fab fa-twitter"></i></a>
+                <a href="#"><i class="fab fa-linkedin"></i></a>
+                <a href="#"><i class="fab fa-github"></i></a>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        function changeStreamSize() {
+            const sizeSelect = document.getElementById('stream-size');
+            const [width, height] = sizeSelect.value.split('x');
+            const liveStream = document.getElementById('live-stream');
+            
+            liveStream.width = width;
+            liveStream.height = height;
+        }
+
+        function toggleFullscreen() {
+            const elem = document.getElementById('live-stream');
+            
+            if (!document.fullscreenElement) {
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen();
+                } else if (elem.webkitRequestFullscreen) {
+                    elem.webkitRequestFullscreen();
+                } else if (elem.msRequestFullscreen) {
+                    elem.msRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        function toggleRecording() {
+            if ({{ 'true' if is_recording else 'false' }}) {
+                window.location.href = "{{ url_for('stop_recording') }}";
+            } else {
+                window.location.href = "{{ url_for('start_recording') }}";
+            }
+        }
+
+        // Auto-reconnect if stream fails
+        let reconnectAttempts = 0;
+        const maxReconnectAttempts = 5;
+        
+        document.getElementById('live-stream').onerror = function() {
+            if (reconnectAttempts < maxReconnectAttempts) {
+                reconnectAttempts++;
+                setTimeout(() => {
+                    this.src = this.src.split('?')[0] + '?reconnect=' + Date.now();
+                }, 2000);
+            }
+        };
+    </script>
+</body>
+</html>
