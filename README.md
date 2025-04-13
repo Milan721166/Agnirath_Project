@@ -1,3 +1,4 @@
+![image](https://github.com/user-attachments/assets/4473214c-05ca-451a-8d55-ea70ffb700cd)
 Arduino IDE Setup for ESP32-CAM
 1. Install Arduino IDE
 Download and install the latest Arduino IDE from arduino.cc.
